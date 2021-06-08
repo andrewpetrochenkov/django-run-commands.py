@@ -12,7 +12,6 @@ from .run_commands_log import  Log
 class Command(models.Model):
     name = models.CharField(max_length=255)
     args = models.CharField(max_length=255,null=True,blank=True)
-    separator= models.TextField(default=' ')
     seconds = models.IntegerField()
     order = models.IntegerField(default=0)
 
@@ -30,21 +29,21 @@ class Command(models.Model):
            models.Index(fields=['is_disabled',]),
            models.Index(fields=['is_running',]),
         ]
-        ordering = ('name','args',)
+        ordering = ('order','name','args',)
 
 
     def call_command(self):
         kwargs = {'is_running':False}
         type(self).objects.filter(pk=self.pk).update(is_running=True)
         try:
-            argv = self.args.split(self.separator or ' ') if self.args else []
+            args = self.args.split(' ') if self.args else []
             f = StringIO()
             started_at=datetime.now()
-            call_command(self.name,*argv, stdout=f)
+            call_command(self.name,*args, stdout=f)
             completed_at=datetime.now()
             out = f.getvalue()
             if self.is_logged:
-                Log(name=self.name,argv = self.args,started_at=started_at,completed_at=completed_at,out=out).save()
+                Log(name=self.name,args = self.args,started_at=started_at,completed_at=completed_at,out=out).save()
             kwargs.update(started_at=started_at,completed_at=completed_at)
         except Exception as e:
             logging.error(e, exc_info=True)

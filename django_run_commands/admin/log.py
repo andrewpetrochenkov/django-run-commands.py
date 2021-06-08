@@ -1,8 +1,10 @@
 from django.contrib import admin
+from django.utils.html import format_html
+from django.utils.timesince import timesince
 from django_run_commands.models import Log
 
 class LogAdmin(admin.ModelAdmin):
-    readonly_fields = [
+    list_display = [
         'name',
         'args',
         'shell',
@@ -12,13 +14,14 @@ class LogAdmin(admin.ModelAdmin):
         'duration',
         'timesince'
     ]
+    list_filter = ['name',]
     search_fields = ['name', ]
 
     def has_add_permission(self, request, obj=None):
         return False
 
-    def has_delete_permission(self, request, obj=None):
-       return False
+    def has_change_permission(self, request, obj=None):
+        return False
 
     def shell(self, log):
         return format_html('<code>python manage.py %s%s</code>' % (log.name,' %s' % log.args if log.args else ''))
